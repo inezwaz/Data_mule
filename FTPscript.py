@@ -28,8 +28,8 @@ logging.basicConfig(filename=client_log_file,
 # Define the configurations for both FTP servers
 ftp_config_1 = {
     "network_name": 'eduroam',
-    "ftp_server": '10.226.118.180',
-    "username": 'ftp-villageA',
+    "ftp_server": '10.226.84.227',
+    "username": 'FTPserver',
     "password": '1234',
     "local_directory": r'C:\Users\hyunj\OneDrive\Desktop\MVP'
 }
@@ -89,7 +89,7 @@ def download_files(ftp, username, local_directory, downloaded_files, log_file):
                     ftp.retrbinary(f'RETR {remote_filename}', local_file.write)
 
                 # Modify the log message to include source and filename
-                log_message = f'From {username} {ftp.host} download {remote_filename} to {local_filepath}'
+                log_message = f'From {username} {ftp.host} download {remote_filename} to Truck {local_filepath}'
                 logging.info(log_message)
 
                 print(f'Downloaded {remote_filename} to {local_filepath}')
@@ -109,7 +109,7 @@ def upload_files(ftp, local_directory, uploading_files):
                     ftp.storbinary(f'STOR {local_filename}', local_file)
 
                 # Log the action on the client
-                log_message = f'From User {local_directory} upload {local_filename} to {ftp.host}'
+                log_message = f'From Truck {local_directory} upload {local_filename} to {ftp.host}'
                 logging.info(log_message)
 
                 print(f'Uploaded {local_filename} to the FTP server')
@@ -138,18 +138,30 @@ while True:
     # Check if connected to server_1
     if is_connected_to_wifi_network(ftp_config_1["network_name"]):
         try:
-            # Connect to server_1
-            while True:
+            # Connect to server_1 with a limited number of retries
+            max_retries = 3
+            retry_interval = 5
+            retry_count = 0
+
+            while retry_count < max_retries:
                 try:
                     ftp1 = FTP()
                     ftp1.connect(ftp_config_1["ftp_server"])
                     ftp1.login(ftp_config_1["username"],
                                ftp_config_1["password"])
+                    print(
+                        f'Connected to {ftp_config_1["network_name"]} as {ftp_config_1["username"]}')
                     break  # Break the loop if the connection is successful
                 except TimeoutError:
                     # Handle the timeout error (server not available)
-                    print("Server not available. Retrying...")
-                    time.sleep(5)
+                    retry_count += 1
+                    print(
+                        f'Server not available. Retrying... (Attempt {retry_count}/{max_retries})')
+                    time.sleep(retry_interval)
+            else:
+                print(
+                    f'Failed to connect to {ftp_config_1["network_name"]} after {max_retries} attempts. Exiting...')
+                # You can choose to exit the script or take other actions here
 
             downloaded_files = []  # Initialize the list for downloaded files
             print(
@@ -175,6 +187,9 @@ while True:
             ftp1.quit()
         except Exception as e:
             print(f"Error downloading from FTP server 1: {str(e)}")
+    else:
+        print(f"Not connected to {ftp_config_1['network_name']}. Exiting...")
+        # You can choose to exit the script or take other actions here
 
     # Check if connected to server_2
     if is_connected_to_wifi_network(ftp_config_2["network_name"]):
@@ -182,18 +197,30 @@ while True:
             # Initialize the list for local files
             local_files = os.listdir(ftp_config_2["local_directory"])
 
-            # Connect to server_2
-            while True:
+            # Connect to server_2 with a limited number of retries
+            max_retries = 3
+            retry_interval = 5
+            retry_count = 0
+
+            while retry_count < max_retries:
                 try:
                     ftp2 = FTP()
                     ftp2.connect(ftp_config_2["ftp_server"])
                     ftp2.login(ftp_config_2["username"],
                                ftp_config_2["password"])
+                    print(
+                        f'Connected to {ftp_config_2["network_name"]} as {ftp_config_2["username"]}')
                     break  # Break the loop if the connection is successful
                 except TimeoutError:
                     # Handle the timeout error (server not available)
-                    print("Server not available. Retrying...")
-                    time.sleep(5)
+                    retry_count += 1
+                    print(
+                        f'Server not available. Retrying... (Attempt {retry_count}/{max_retries})')
+                    time.sleep(retry_interval)
+            else:
+                print(
+                    f'Failed to connect to {ftp_config_2["network_name"]} after {max_retries} attempts. Exiting...')
+                # You can choose to exit the script or take other actions here
 
             uploading_files = []  # Initialize the list for downloaded files
             print(
@@ -219,6 +246,7 @@ while True:
             ftp2.quit()
 
         except Exception as e:
-            print(f"Error downloading from FTP server 1: {str(e)}")
+            print(f"Error downloading from FTP server 2: {str(e)}")
+
     # Sleep before checking again
     time.sleep(5)
