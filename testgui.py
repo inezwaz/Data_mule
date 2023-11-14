@@ -3,6 +3,7 @@ from tkinter import ttk, filedialog
 import json
 import hashlib
 import os
+import re
 
 
 class App:
@@ -63,6 +64,82 @@ class App:
 
         # Initially, show the login page
         self.show_login_page()
+
+        # Add a status label to the Dropbox page
+        #self.file_transfer_status_label = ttk.Label(self.dropbox_frame, text="", background="white")
+        #self.file_transfer_status_label.grid(row=5, column=0, columnspan=2, pady=5)
+
+        # Add a listbox for file statuses
+        self.file_status_listbox = tk.Listbox(self.dropbox_frame, height=10)
+        self.file_status_listbox.grid(row=7, column=0, columnspan=2, padx=20, sticky=(tk.W, tk.E))
+
+        # Add a button to refresh file statuses
+        self.refresh_status_button = ttk.Button(self.dropbox_frame, text="Refresh Statuses", command=self.refresh_file_statuses)
+        self.refresh_status_button.grid(row=8, column=0, columnspan=2, pady=5)
+
+        
+    def get_file_statuses(self, log_file_path, directory_path):
+        file_statuses = {}
+
+        def update_file_status(filename, status):
+            file_statuses[filename] = status
+
+        def get_status(line):
+            if "download" in line:
+                return "In Transit (Yellow)"
+            elif "upload" in line:
+                return "Delivered (Green)"
+            else:
+                return "Other (Gray)"
+
+        # Read log file and update statuses
+        with open(log_file_path, 'r') as log_file:
+            download_pattern = re.compile(r"download (.+?) to")
+            upload_pattern = re.compile(r"upload (.+?) to")
+
+            for line in log_file:
+                if ".log" in line:
+                    continue
+
+                status = get_status(line)
+                download_match = download_pattern.search(line)
+                upload_match = upload_pattern.search(line)
+
+                if download_match:
+                    filename = download_match.group(1)
+                elif upload_match:
+                    filename = upload_match.group(1)
+                else:
+                    continue
+
+                update_file_status(filename, status)
+
+        # List files in the directory
+        files_in_directory = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
+
+        # Compare and update file statuses
+        for file in files_in_directory:
+            if file not in file_statuses:
+                file_statuses[file] = "Not in Log (Gray)"
+
+        return file_statuses    
+    
+
+    def refresh_file_statuses(self):
+        # Clear the current list
+        self.file_status_listbox.delete(0, tk.END)
+
+        # Define the paths for the log file and directory
+        log_file_path = r'C:\Users\newti\Desktop\FTPfolder\client.log'
+        directory_path = r'C:\Users\newti\Desktop\FTPfolder'
+
+        # Get the file statuses
+        status_dict = self.get_file_statuses(log_file_path, directory_path)
+
+        # Update the listbox with new statuses
+        for filename, status in status_dict.items():
+            self.file_status_listbox.insert(tk.END, f"{filename}: {status}")
+
 
     def create_login_page(self):
         self.login_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -402,6 +479,10 @@ class App:
         file_path = filedialog.askopenfilename()
 
         if file_path and selected_friend:
+            # update status to red (file is being sent)
+            self.file_transfer_status_label.config(text="Sending file...", background="red")
+            self.root.update()
+
             uploaded_file_info = {
                 'friend': selected_friend,
                 'file_name': os.path.basename(file_path)
@@ -414,6 +495,24 @@ class App:
             self.populate_file_listbox()
 
             # TODO: Upload the file to the FTP server to the selected friend
+
+            # After the FTP upload logic
+            # Update status to yellow (file is being transferred)
+            #self.file_transfer_status_label.config(text="Transferring file...", background="yellow")
+            #self.root.update()
+
+            # Simulate the FTP transfer delay (replace with actual FTP transfer code)
+            #import time
+            #time.sleep(2)
+
+            # Update status to green (file transfer complete)
+            #self.file_transfer_status_label.config(text="File transferred successfully", background="green")
+
+            # Clear the status after some time
+            #self.root.after(5000, lambda: self.file_transfer_status_label.config(text="", background="white"))
+
+
+
 
         else:
             error_label = ttk.Label(

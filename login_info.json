@@ -8,5 +8,15 @@
     "password": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
     "phone": "123-123-1234",
     "address": "Orlando"
+  },
+  "username1": {
+    "password": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+    "phone": "4519730813",
+    "address": "5001 E Blvd "
+  },
+  "testtest": {
+    "password": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+    "phone": "765451987",
+    "address": "222 Loop road"
   }
 }
