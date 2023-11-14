@@ -1,6 +1,7 @@
 import os
 import re
 
+#statuscript
 def get_file_statuses(log_file_path, directory_path):
     file_statuses = {}
 
